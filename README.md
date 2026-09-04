@@ -1,58 +1,140 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# LaravelStack
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplicación base construida con Laravel, Inertia y React, preparada para ejecutarse de forma local en contenedores y pensada principalmente para desplegarse en la arquitectura cloud definida en el repositorio `aws-deployment`.
 
-## About Laravel
+## Objetivo principal
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+El objetivo de este repositorio no es quedarse solo como entorno local de desarrollo. Su finalidad principal es servir como la aplicación que desplegamos en AWS sobre la infraestructura que ya fue creada con `aws-deployment`.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+En otras palabras:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- Este repositorio contiene el código de la aplicación.
+- `aws-deployment` contiene la infraestructura cloud donde esta aplicación vive.
+- El trabajo de ambos repositorios debe mantenerse alineado para que el despliegue sea repetible, estable y fácil de operar.
 
-## Learning Laravel
+## Rol de este repositorio dentro de la arquitectura
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Este proyecto concentra la capa de aplicación:
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- Backend en Laravel 13.
+- Frontend con React 19, Inertia.js y Vite.
+- Contenerizacion con PHP-FPM y Nginx.
+- Base de datos MySQL para el entorno local con Docker Compose.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+La infraestructura cloud se resuelve fuera de este repositorio, en `aws-deployment`. Por eso, los cambios aquí deben pensarse con mentalidad de despliegue:
 
-## Agentic Development
+- configuración por variables de entorno,
+- compatibilidad con contenedores,
+- dependencia explícita de servicios externos,
+- y separación clara entre aplicación e infraestructura.
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Stack actual
 
-```bash
-composer require laravel/boost --dev
+- PHP 8.3+ en Composer y contenedor PHP 8.4 FPM.
+- Laravel `^13.17`.
+- Inertia Laravel `^3.3`.
+- React `^19.1`.
+- Vite `^8`.
+- Tailwind CSS `^4`.
+- Nginx como servidor web del contenedor.
+- MySQL 8 para desarrollo local.
 
-php artisan boost:install
+## Arquitectura local
+
+El proyecto incluye una configuración Docker pensada para levantar un entorno parecido al runtime de despliegue:
+
+- `app`: contenedor PHP-FPM con Composer, Node.js y npm.
+- `webserver`: contenedor Nginx que publíca la aplicación.
+- `db`: contenedor MySQL 8 con volumen persistente.
+
+Archivo principal:
+
+- [docker/compose.yml](docker/compose.yml)
+
+configuración web:
+
+- [docker/Dockerfile](docker/Dockerfile)
+- [nginx/default.conf](nginx/default.conf)
+
+La aplicación queda expuesta localmente en `http://localhost:8084` Sí se usan los valores por defecto del compose.
+
+## Puesta en marcha local
+
+### 1. Preparar variables de entorno
+
+Sí todavía no existe `.env`, crea uno a partir de `.env.example`.
+
+```powershell
+Copy-Item .env.example .env
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Nota: `.env.example` viene con SQLite por defecto, pero la ejecución con Docker Compose ya inyecta valores compatibles con MySQL para el contenedor local.
 
-## Contributing
+### 2. Levantar contenedores
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```powershell
+docker compose -f docker/compose.yml up --build -d
+```
 
-## Code of Conduct
+### 3. Instalar dependencias y preparar la app
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Sí es la primera vez que se ejecuta el proyecto, corre:
 
-## Security Vulnerabilities
+```powershell
+docker compose -f docker/compose.yml exec app composer setup
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Ese script instala dependencias PHP y Node, genera la clave de Laravel, ejecuta migraciones y compila assets.
 
-## License
+### 4. Acceder a la aplicación
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Abre:
+
+- `http://localhost:8084`
+
+## Desarrollo diario
+
+Para trabajar sobre la aplicación ya levantada:
+
+```powershell
+docker compose -f docker/compose.yml exec app composer test
+```
+
+```powershell
+docker compose -f docker/compose.yml exec app npm run build
+```
+
+Sí necesitas desarrollo frontend con recarga más rápida, puedes ejecutar Vite dentro del contenedor `app` o desde el host según tu flujo de trabajo.
+
+## Consideraciones para despliegue en AWS
+
+Como este proyecto esta orientado a desplegarse sobre la infraestructura creada con `aws-deployment`, cualquier cambio debería validar al menos estos puntos:
+
+- La aplicación debe configurarse completamente por variables de entorno.
+- `APP_ENV`, `APP_DEBUG`, `APP_URL` y credenciales no deben quedar fijas en código.
+- La conexión a base de datos debe apuntar al servicio administrado definido por la infraestructura cloud.
+- El almacenamiento persistente y los secretos deben resolverse con servicios AWS definidos fuera de este repo.
+- El contenedor debe seguir siendo una unidad de despliegue portable entre local y cloud.
+
+## Relacion con `aws-deployment`
+
+Se recomienda mantener sincronizados ambos lados del sistema:
+
+- Cuando cambie la topología de infraestructura en `aws-deployment`, revisar esta aplicación para asegurar compatibilidad.
+- Cuando esta aplicación requiera nuevos secretos, variables, dominios, buckets, colas o dependencias externas, reflejar esos cambios en `aws-deployment`.
+- Cuando cambie el runtime o el modelo de despliegue, validar que `Dockerfile`, Nginx y configuración Laravel sigan siendo consistente con AWS.
+
+## Estructura relevante
+
+- [app](app)
+- [config](config)
+- [docker](docker)
+- [nginx](nginx)
+- [resources/js](resources/js)
+- [routes](routes)
+
+## Estado actual
+
+Hoy el proyecto funciona como base Laravel + React con Inertia, contenerizada para entorno local y lista para seguir evolucionando hacia un flujo de despliegue cloud más formal sobre AWS.
+
+La documentación de este repositorio debe seguir reforzando esa idea: este código es la aplicación; `aws-deployment` es la infraestructura objetivo.
