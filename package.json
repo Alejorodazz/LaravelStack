@@ -8,8 +8,10 @@
     },
     "dependencies": {
         "@inertiajs/react": "^2.2.9",
+        "build": "^0.1.4",
         "react": "^19.1.1",
-        "react-dom": "^19.1.1"
+        "react-dom": "^19.1.1",
+        "run": "^2.1.4"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
