@@ -1,4 +1,5 @@
-name: APP_Contenerizada
+name: APP_Contenerizada 
+version: '1.0.0'
 
 # Contexto de construcción y configuración de la aplicación
 x-app-build: &app-build
@@ -18,12 +19,7 @@ x-app-env: &app-env
   DB_PORT: ${DB_PORT:-3306}
   DB_CONNECTION: ${DB_CONNECTION:-mysql}
   DB_HOST: ${DB_HOST:-db}
-
-x-grafana-ports: &grafana-ports
-  - "${GRAFANA_PORT:-3000}:3000"
-
-x-prometheus-ports: &prometheus-ports
-  - "${PROMETHEUS_PORT:-9090}:9090"
+  FORDWARD_DB_PORT: ${FORDWARD_DB_PORT:-3308}
 
 # Configuración de servicios de contenedores para la aplicación
 x-app-services: &app-services
@@ -77,6 +73,8 @@ services:
     image: mysql:8.0
     container_name: db_container
     restart: unless-stopped
+    ports:
+      - ${FORWARD_DB_PORT:-3308}:3306
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
       MYSQL_DATABASE: ${DB_DATABASE:-laravel}
@@ -103,34 +101,11 @@ services:
     networks:
       - app_network
     healthcheck:
-      <<: *webserver-healthcheck
-  
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus_container
-    restart: unless-stopped
-    ports: *prometheus-ports
-    volumes:
-      - prometheus_data:/prometheus
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    networks:
-      - app_network
-  
-  grafana:
-    image: grafana/grafana-oss:latest
-    container_name: grafana_container
-    restart: unless-stopped
-    ports: *grafana-ports
-    volumes:
-      - grafana_data:/var/lib/grafana
-    networks:
-      - app_network
+      <<: *webserver-healthcheck 
 
 networks:
   app_network:
     driver: bridge
 
 volumes:
-    grafana_data:
-    prometheus_data:
     db_data:
