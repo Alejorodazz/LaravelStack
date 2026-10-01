@@ -23,6 +23,15 @@ RUN apk add --no-cache \
         zip \
     && apk del .build-deps
 
+RUN mkdir -p \
+    storage/framework/cache/data \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/logs \
+    bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
+    
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 CMD ["php-fpm", "-F"]

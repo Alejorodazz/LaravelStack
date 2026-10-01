@@ -1,5 +1,4 @@
 name: APP_Contenerizada 
-version: '1.0.0'
 
 # Contexto de construcción y configuración de la aplicación
 x-app-build: &app-build
